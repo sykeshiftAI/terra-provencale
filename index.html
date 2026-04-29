@@ -148,16 +148,27 @@
     .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px,-5px); }
 
     @media (max-width: 767px) {
-      .hamburger { display: flex; }
+      .hamburger { display: flex; position: relative; z-index: 1001; }
       .nav-links {
         position: fixed; inset: 0;
         background: var(--bg); flex-direction: column;
         justify-content: center; align-items: center;
         gap: 2.25rem; opacity: 0; pointer-events: none;
-        transition: opacity .35s ease; z-index: 99;
+        transition: opacity .35s ease; z-index: 1000;
       }
       .nav-links.open { opacity: 1; pointer-events: all; }
       .nav-links a { color: var(--text) !important; font-size: 1.25rem; }
+    }
+
+    #nav.menu-open {
+      background: #FAF7F0 !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+    #nav.menu-open .hamburger,
+    #nav.menu-open .hamburger span {
+      opacity: 1 !important;
+      visibility: visible !important;
     }
 
     /* ════════════════════════════════
@@ -1566,12 +1577,15 @@
   ham.addEventListener('click', () => {
     ham.classList.toggle('open');
     navLinks.classList.toggle('open');
-    document.body.style.overflow = navLinks.classList.contains('open') ? 'hidden' : '';
+    const isOpen = navLinks.classList.contains('open');
+    nav.classList.toggle('menu-open', isOpen);
+    document.body.style.overflow = isOpen ? 'hidden' : '';
   });
   navLinks.querySelectorAll('a').forEach(a => {
     a.addEventListener('click', () => {
       ham.classList.remove('open');
       navLinks.classList.remove('open');
+      nav.classList.remove('menu-open');
       document.body.style.overflow = '';
     });
   });
