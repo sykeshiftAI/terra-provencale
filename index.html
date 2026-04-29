@@ -626,6 +626,33 @@
       .stat-n { font-size: 1.75rem; }
       .stat-l { font-size: .68rem; }
     }
+
+    /* ════════════════════════════════
+       FORM VALIDATION VISUAL
+    ════════════════════════════════ */
+    .fg input.error,
+    .fg textarea.error {
+      border-color: #C4692A !important;
+      background-color: #fff5f0;
+      animation: shake 0.3s ease;
+    }
+
+    .field-error-msg {
+      color: #C4692A;
+      font-size: 13px;
+      margin-top: 4px;
+      display: none;
+    }
+
+    .field-error-msg.visible {
+      display: block;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
   </style>
 
   <!-- Schema.org JSON-LD for Google Rich Snippets -->
@@ -1427,35 +1454,40 @@
       </div>
 
       <div class="contact-form fu">
-        <form id="contactForm" name="contact" netlify netlify-honeypot="bot-field" novalidate>
+        <form id="contactForm" name="contact" method="POST" netlify netlify-honeypot="bot-field" novalidate>
           <input type="hidden" name="form-name" value="contact">
           <p style="display:none">
             <input name="bot-field">
           </p>
           <div class="form-row">
             <div class="fg">
-              <label for="nom">Nom</label>
+              <label for="nom">Nom <span style="color:#C4692A">*</span></label>
               <input type="text" id="nom" name="nom" placeholder="Votre nom" required>
+              <span class="field-error-msg" id="error-nom">Ce champ est obligatoire</span>
             </div>
             <div class="fg">
-              <label for="prenom">Prénom</label>
+              <label for="prenom">Prénom <span style="color:#C4692A">*</span></label>
               <input type="text" id="prenom" name="prenom" placeholder="Votre prénom" required>
+              <span class="field-error-msg" id="error-prenom">Ce champ est obligatoire</span>
             </div>
           </div>
           <div class="form-row">
             <div class="fg">
-              <label for="email">Email</label>
+              <label for="email">Email <span style="color:#C4692A">*</span></label>
               <input type="email" id="email" name="email" placeholder="votre@email.fr" required>
+              <span class="field-error-msg" id="error-email">Ce champ est obligatoire</span>
             </div>
             <div class="fg">
-              <label for="tel">Téléphone</label>
+              <label for="tel">Téléphone <span style="color:#C4692A">*</span></label>
               <input type="tel" id="tel" name="tel" placeholder="06 XX XX XX XX" required>
+              <span class="field-error-msg" id="error-tel">Ce champ est obligatoire</span>
             </div>
           </div>
           <div class="form-row full">
             <div class="fg">
-              <label for="message">Votre projet</label>
+              <label for="message">Votre projet <span style="color:#C4692A">*</span></label>
               <textarea id="message" name="message" rows="5" placeholder="Décrivez votre projet, la superficie de votre terrain, vos souhaits..." required></textarea>
+              <span class="field-error-msg" id="error-message">Ce champ est obligatoire</span>
             </div>
           </div>
           <button type="submit" class="form-submit">Envoyer ma demande — devis gratuit</button>
@@ -1609,40 +1641,54 @@
   const heroReveal = document.querySelector('#hero [data-reveal]');
   if (heroReveal) setTimeout(() => heroReveal.classList.add('on'), 300);
 
-  /* ── Contact form submit ── */
-  document.getElementById('contactForm').addEventListener('submit', e => {
-    e.preventDefault();
-    const form = e.target;
-    const btn = form.querySelector('.form-submit');
-    const formData = new FormData(form);
+  /* ── Contact form validation ── */
+  document.querySelector('form[name="contact"]')
+    .addEventListener('submit', function(e) {
+      const fields = [
+        { id: 'nom', msg: 'error-nom' },
+        { id: 'email', msg: 'error-email' },
+        { id: 'tel', msg: 'error-tel' },
+        { id: 'message', msg: 'error-message' }
+      ];
 
-    btn.textContent = 'Envoi en cours...';
-    btn.disabled = true;
+      let hasError = false;
 
-    fetch('https://formsubmit.co/ajax/contact@terra-provencale.fr,terraprovencale@gmail.com', {
-      method: 'POST',
-      body: formData
-    })
-    .then(response => {
-      if (response.ok) {
-        btn.textContent = 'Message envoyé !';
-        btn.style.background = '#3D5A2A';
-        setTimeout(() => {
-          btn.textContent = 'Envoyer ma demande — devis gratuit';
-          btn.style.background = '';
-          btn.disabled = false;
-          form.reset();
-        }, 4000);
-      } else {
-        btn.textContent = 'Erreur, réessayez';
-        btn.disabled = false;
+      fields.forEach(f => {
+        const input = this.querySelector('[name="' + f.id + '"]');
+        const msg = document.getElementById(f.msg);
+        if (!input.value.trim()) {
+          input.classList.add('error');
+          msg.classList.add('visible');
+          hasError = true;
+        } else {
+          input.classList.remove('error');
+          msg.classList.remove('visible');
+        }
+      });
+
+      if (hasError) {
+        e.preventDefault();
+        const firstError = this.querySelector('.error');
+        if (firstError) {
+          firstError.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+          });
+        }
+        return;
       }
-    })
-    .catch(err => {
-      btn.textContent = 'Erreur, réessayez';
-      btn.disabled = false;
     });
-  });
+
+  // Retire l'erreur quand l'utilisateur commence à taper
+  document.querySelectorAll('form[name="contact"] input, form[name="contact"] textarea')
+    .forEach(input => {
+      input.addEventListener('input', function() {
+        this.classList.remove('error');
+        const errorId = 'error-' + this.getAttribute('name');
+        const msg = document.getElementById(errorId);
+        if (msg) msg.classList.remove('visible');
+      });
+    });
 
 </script>
 </body>
